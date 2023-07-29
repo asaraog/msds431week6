@@ -11,9 +11,9 @@ The Go implementation will test k-fold crossvalidated linear regression models w
 3. Linear regression with concurrent programming
 4. Linear regression with regularization and concurrent programming
 
-All models are benchmarked for runtime using 'time' before commands in the command line. We also see that models with concurrent programming had the same R^2 values in both models. Concurrency significantly reduced runtime by XXXs and XXXs for models with and without regularization respectively as shown in Table 1 below.
+All models are benchmarked for runtime using 'time' before commands in the command line. We also see that models with concurrent programming had the same R^2^ values in both models. Concurrency significantly reduced runtime by XXXs and XXXs for models with and without regularization respectively as shown in Table 1 below.
 
-| Model  | R^2     | Runtime | 
+| Model  | R^2^    | Runtime | 
 | ------ | ------- | ------- | 
 | 1      |   0.78  |    s    |
 | 2      |   0.78  |    s    |
