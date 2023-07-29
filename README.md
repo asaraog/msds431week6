@@ -4,7 +4,7 @@
 
 This project aims to evaluate Go's concurrent programming framework for training and testing machine learning models namely linear regression . In particular, this project uses the [Boston Housing Study (1970)](http://lib.stat.cmu.edu/datasets/boston), commonly used by statisticians to predict housing prices. This dataset was modified by others (Miller 1999) to remove the feature 'B' encoding racial segregation.
 
-The Go implementation will test linear regression models with and without regulization and/or concurrency:
+The Go implementation will test k-fold crossvalidated linear regression models with and without regulization and/or concurrency:
 
 1. Linear regression
 2. Linear regression with regularization
