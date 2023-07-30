@@ -20,6 +20,19 @@ All models are benchmarked for runtime using 'time' before commands in the comma
 | 3      |   0.78  |    s    |
 | 4      |   0.80  |    s    |
 
+## Files
+
+*saraogeeweek6.go:* \
+Main routine loads csv file and uses flag '-model' to select model as an integer (1, 2, 3 and 4).
+
+*saraogeeweek6_test.go:* \
+Unit test for regression ensuring equivalent values with and without concurrency for models.
+
+*boston.csv* \
+Input file for Boston housing data from Miller 1999.
+
+*Week6* \
+Unix executable file of cross-compiled Go code for Mac/Windows. 
 
 ## Installation
 
@@ -27,10 +40,10 @@ Download or git clone this project onto local machine into folder on local machi
 ```
 git clone https://github.com/asaraog/msds431week6.git
 cd msds431week6
-time ./model1
-time ./model2
-time ./model3
-time ./model4
+time ./Week6 -model 1
+time ./Week6 -model 2
+time ./Week6 -model 3
+time ./Week6 -model 4
 
 ```
 
