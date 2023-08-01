@@ -18,7 +18,68 @@ func main() {
 	reader := csv.NewReader(file)
 	record, _ := reader.ReadAll()
 	//headers := records[1][:]
+	//removes first column of categorical variable. I did try adding it by one hot encoding but I had poor results
 	records := record[1:][:]
+
+	Xrand, Yrand := StrMatrix(records) //takes in records of strings and turns into mat.Dense type
+
+	//Splits X matrix into training and test
+	Xtrain := Xrand.Slice(0, 400, 0, 14)
+	Xtest := Xrand.Slice(400, 506, 0, 14)
+	Ytrain := Yrand.Slice(0, 400, 0, 1)
+	Ytest := Yrand.Slice(400, 506, 0, 1)
+
+	concurrency := 0
+	flag.IntVar(&concurrency, "concurrency", 0, "True/False for concurrency")
+	flag.Parse()
+
+	switch concurrency {
+	case 0:
+		var rmse1 float64
+		var r21 float64
+		var rmse2 float64
+		var r22 float64
+		for g := 0; g < 100; g++ {
+			Beta1 := RegularizedLinearRegression(0.000001, Xtrain, Ytrain) //close to no regularization
+			Beta2 := RegularizedLinearRegression(3.8, Xtrain, Ytrain)      //regularization
+			rmse1 = RMSE(Beta1, Xtest, Ytest)
+			r21 = R2(Beta1, Xtest, Ytest)
+			rmse2 = RMSE(Beta2, Xtest, Ytest)
+			r22 = R2(Beta2, Xtest, Ytest)
+		}
+		fmt.Printf("RMSE for Linear Regression: %f\n", rmse1)
+		fmt.Printf("R2 for Linear Regression: %f\n", r21)
+		fmt.Printf("RMSE for Regularized Linear Regression: %f\n", rmse2)
+		fmt.Printf("R2 for Regularized Linear Regression: %f\n", r22)
+
+	case 1:
+		rmsech1 := make(chan float64)
+		r2ch1 := make(chan float64)
+		rmsech2 := make(chan float64)
+		r2ch2 := make(chan float64)
+		for g := 0; g < 100; g++ {
+			go func() {
+				Beta1 := RegularizedLinearRegression(0.000001, Xtrain, Ytrain) //close to no regularization
+				rmsech1 <- RMSE(Beta1, Xtest, Ytest)
+				r2ch1 <- R2(Beta1, Xtest, Ytest)
+				Beta2 := RegularizedLinearRegression(3.8, Xtrain, Ytrain) //regularization
+				rmsech2 <- RMSE(Beta2, Xtest, Ytest)
+				r2ch2 <- R2(Beta2, Xtest, Ytest)
+			}()
+		}
+		rmse1 := <-rmsech1
+		r21 := <-r2ch1
+		fmt.Printf("RMSE: %f\n", rmse1)
+		fmt.Printf("R2: %f\n", r21)
+		rmse2 := <-rmsech2
+		r22 := <-r2ch2
+		fmt.Printf("RMSE: %f\n", rmse2)
+		fmt.Printf("R2: %f\n", r22)
+	}
+}
+
+func StrMatrix(records [][]string) (X, Y mat.Dense) {
+	//takes in records of strings and turns into mat.Dense type
 	input_matrix := make([][]float64, len(records))
 	for i := range records {
 		input_matrix[i] = make([]float64, len(records[0]))
@@ -54,73 +115,7 @@ func main() {
 		}
 	}
 
-	//Splits X matrix into training and test
-	Xtrain := Xrand.Slice(0, 400, 0, 14)
-	Xtest := Xrand.Slice(400, 506, 0, 14)
-	Ytrain := Yrand.Slice(0, 400, 0, 1)
-	Ytest := Yrand.Slice(400, 506, 0, 1)
-
-	model := 1
-	flag.IntVar(&model, "model", 1, "model number")
-	flag.Parse()
-
-	switch model {
-	case 1:
-		var rmse float64
-		var r2 float64
-		avgBeta := mat.NewDense(14, 1, nil)
-		for g := 0; g < 100; g++ {
-			var Beta mat.Dense
-			Beta1000 := mat.NewDense(14, 1000, nil)
-
-			// var valrmse []float64
-			// var valr2 []float64
-			for h := 0; h < 1000; h++ {
-				// a := rand.Perm(400) //outputs random indices for rows
-				// Xrand := mat.NewDense(400, 14, nil)
-				// Yrand := mat.NewDense(400, 1, nil)
-				// for t := 0; t < 400; t++ {
-				// 	Yrand.Set(t, 0, Ytrain.At(a[t], 0))
-				// 	for u := 0; u < 14; u++ {
-				// 		Xrand.Set(t, u, Xtrain.At(a[t], u))
-				// 	}
-				// }
-				// Xvaltrain := Xrand.Slice(0, 400, 0, 14)
-				// Yvaltrain := Yrand.Slice(0, 400, 0, 1)
-				Beta = RegularizedLinearRegression(3.8, Xtrain, Ytrain)
-
-				for a := 0; a < 14; a++ {
-					Beta1000.Set(a, h, Beta.At(a, 0))
-				}
-
-			}
-			for j := 0; j < 14; j++ {
-				sumBeta := mat.Sum(Beta1000.ColView(j)) / 1000
-				avgBeta.Set(j, 0, sumBeta)
-			}
-
-			rmse, r2 = RegressionMetrics(*avgBeta, Xtest, Ytest)
-			fmt.Println(mat.Sum(Beta1000.ColView(0)))
-		}
-
-		fmt.Println(rmse)
-		fmt.Println(r2)
-	case 2:
-		var rmse float64
-		var r2 float64
-		for g := 0; g < 100; g++ {
-			Beta := RegularizedLinearRegression(38, Xtrain, Ytrain)
-			rmse, r2 = RegressionMetrics(Beta, Xtest, Ytest)
-		}
-		fmt.Println(rmse)
-		fmt.Println(r2)
-		// case 3:
-		// Beta := RegularizedLinearRegression(38, Xtrain, Ytrain)
-		// rmse, r2 := RegressionMetrics(&Beta, Xtest, Ytest)
-		// fmt.Println(rmse)
-		// fmt.Println(r2)
-
-	}
+	return *Xrand, *Yrand
 }
 
 func RegularizedLinearRegression(alpscalar float64, Xtrain, Ytrain mat.Matrix) (Beta mat.Dense) {
@@ -139,6 +134,7 @@ func RegularizedLinearRegression(alpscalar float64, Xtrain, Ytrain mat.Matrix) (
 			alpha.Set(i, j, alpscalar)
 		}
 	}
+	alpha.Set(0, 0, 0) //Makes sure we do not regularize our first term
 	//Training with Beta= ((XtX +alpha*I)^-1)*(XtY)
 	xx.Mul(Xtrain.T(), Xtrain) //XtX
 	i0.Pow(&xx, 0)             //I
@@ -151,7 +147,7 @@ func RegularizedLinearRegression(alpscalar float64, Xtrain, Ytrain mat.Matrix) (
 	return Beta
 }
 
-func RegressionMetrics(Beta mat.Dense, Xtest, Ytest mat.Matrix) (rmse, r2 float64) {
+func R2(Beta mat.Dense, Xtest, Ytest mat.Matrix) (r2 float64) {
 	//Initialization of variables
 	var Ypred mat.Dense
 	var e mat.Dense       //error or ytest-ypred
@@ -163,18 +159,36 @@ func RegressionMetrics(Beta mat.Dense, Xtest, Ytest mat.Matrix) (rmse, r2 float6
 	Ypred.Mul(Xtest, &Beta)
 
 	e.Sub(Ytest, &Ypred) //error or ytest-ypred
-	e2.Mul(e.T(), &e)    //error squared for r2 calculation
-	params, _ := Ytest.Dims()
-	Yave := mat.Sum(Ytest) / float64(params)
+	e2.Mul(e.T(), &e)    //error squared for r2 calculation (SSR)
+
+	//Creating Ymean matrix for ytest-ymean
+	params, _ := Ytest.Dims()                //for denominator in mean calculation
+	Yave := mat.Sum(Ytest) / float64(params) //calculates ymean
 	Ymean := mat.NewDense(params, 1, nil)
 	for i := 0; i < params; i++ {
 		Ymean.Set(i, 0, float64(Yave))
 	}
-	yYmean.Sub(Ytest, Ymean)         //ytest-ymean for r2 calculation
-	yYmean2.Mul(yYmean.T(), &yYmean) //(ytest-ymean)^2 for r2 calculation
 
-	r2 = 1 - e2.At(0, 0)/yYmean2.At(0, 0) //Calculates R^2
-	rmse = e.Norm(2)                      //Calculates RMSE
-	return
+	//Calculates R^2 as 1-SSR/SSE
+	yYmean.Sub(Ytest, Ymean)         //ytest-ymean for r2 calculation (SSE)
+	yYmean2.Mul(yYmean.T(), &yYmean) //(ytest-ymean)^2 for r2 calculation (SSE)
+	r2 = 1 - e2.At(0, 0)/yYmean2.At(0, 0)
+	return r2
+
+}
+
+func RMSE(Beta mat.Dense, Xtest, Ytest mat.Matrix) (rmse float64) {
+	//Initialization of variables
+	var Ypred mat.Dense
+	var e mat.Dense  //error or ytest-ypred
+	var e2 mat.Dense //error squared for r2 calculation
+
+	//Testing and predictions
+	Ypred.Mul(Xtest, &Beta)
+
+	e.Sub(Ytest, &Ypred) //error or ytest-ypred
+	e2.Mul(e.T(), &e)    //error squared for r2 calculation
+	rmse = e.Norm(2)     //Calculates RMSE
+	return rmse
 
 }
