@@ -41,7 +41,7 @@ func main() {
 		var r22 float64
 		for g := 0; g < 100; g++ {
 			Beta1 := RegularizedLinearRegression(0.000001, Xtrain, Ytrain) //close to no regularization
-			Beta2 := RegularizedLinearRegression(3.8, Xtrain, Ytrain)      //regularization
+			Beta2 := RegularizedLinearRegression(0.51, Xtrain, Ytrain)     //regularization
 			rmse1 = RMSE(Beta1, Xtest, Ytest)
 			r21 = R2(Beta1, Xtest, Ytest)
 			rmse2 = RMSE(Beta2, Xtest, Ytest)
@@ -62,7 +62,7 @@ func main() {
 				Beta1 := RegularizedLinearRegression(0.000001, Xtrain, Ytrain) //close to no regularization
 				rmsech1 <- RMSE(Beta1, Xtest, Ytest)
 				r2ch1 <- R2(Beta1, Xtest, Ytest)
-				Beta2 := RegularizedLinearRegression(3.8, Xtrain, Ytrain) //regularization
+				Beta2 := RegularizedLinearRegression(0.51, Xtrain, Ytrain) //regularization
 				rmsech2 <- RMSE(Beta2, Xtest, Ytest)
 				r2ch2 <- R2(Beta2, Xtest, Ytest)
 			}()
