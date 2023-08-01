@@ -39,5 +39,6 @@ time ./Week6 -concurrency 1
 ## References
 
 Brownlee, Jason. 2020. “How to Develop Ridge Regression Models in Python.” MachineLearningMastery.Com (blog). October 8, 2020. https://machinelearningmastery.com/ridge-regression-with-python/.
+
 Miller, Thomas W. 1999. "The Boston splits: Sample size requirements for modern regression." 1999 Proceedings of the Statistical Computing Section of the American Statistical Association, 210–215.
 
